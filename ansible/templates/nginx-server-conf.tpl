@@ -1,0 +1,33 @@
+server {
+    listen 80;
+    server_name {{servername}};
+    root {{docroot}};
+    index  index.php index.html index.htm;
+
+    access_log  /var/log/nginx/{{servername}}.access.log;
+    error_log /var/log/nginx/{{servername}}.error.log;
+
+    location / {
+        try_files $uri $uri/ /index.php;
+        if (-f $request_filename/index.php) {
+            break;
+        }
+
+        if (!-f $request_filename){
+            rewrite  ^(.*)$ /index.php?q=$1  last;
+            break;
+        }
+    }
+
+    location ~ \.php$ {
+        fastcgi_pass    127.0.0.1:9001;
+        client_max_body_size 2m;
+        fastcgi_index   index.php;
+        fastcgi_connect_timeout 300s;
+        fastcgi_send_timeout 300s;
+        fastcgi_read_timeout 300s;
+        fastcgi_buffers 256 4k;
+        fastcgi_param    SCRIPT_FILENAME    {{docroot}}$fastcgi_script_name;
+        include    fastcgi_params;
+    }
+}
