@@ -1,11 +1,11 @@
 server {
     listen 80;
-    server_name {{servername}};
-    root {{docroot}};
+    server_name {{ nginx.servername }};
+    root {{ nginx.docroot }};
     index  index.php index.html index.htm;
 
-    access_log  /var/log/nginx/{{servername}}.access.log;
-    error_log /var/log/nginx/{{servername}}.error.log;
+    access_log  /var/log/nginx/{{ nginx.servername }}.access.log;
+    error_log /var/log/nginx/{{ nginx.servername }}.error.log;
 
     location / {
         try_files $uri $uri/ /index.php;
@@ -27,7 +27,7 @@ server {
         fastcgi_send_timeout 300s;
         fastcgi_read_timeout 300s;
         fastcgi_buffers 256 4k;
-        fastcgi_param    SCRIPT_FILENAME    {{docroot}}$fastcgi_script_name;
+        fastcgi_param    SCRIPT_FILENAME    {{ nginx.docroot }}$fastcgi_script_name;
         include    fastcgi_params;
     }
 }

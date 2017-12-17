@@ -1,0 +1,8 @@
+--- # Install nginx vhosts
+
+- name: Vhost local.dev file
+  template: >
+    src="templates/nginx-server-conf.j2"
+    dest="/etc/nginx/conf.d/default.conf"
+    mode=0644
+

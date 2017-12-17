@@ -1,0 +1,86 @@
+--- # Install nginx
+
+- name: Check if Nginx is installed.
+  command: which /usr/sbin/nginx
+  changed_when: false
+  failed_when: false
+  register: nginx_installed
+
+- name: Download {{nginx.version}} archive
+  get_url:
+    url: '{{ nginx.url }}'
+    dest: '{{ nginx.download_path }}/{{ nginx.version }}.tar.gz'
+  when: nginx_installed.rc != 0
+
+- name: Extract {{nginx.version}} archive
+  unarchive: 
+    src='{{ nginx.download_path }}/{{ nginx.version }}.tar.gz'
+    dest='{{ nginx.download_path }}'
+    creates=no
+    remote_src=yes
+  when: nginx_installed.rc != 0
+
+- name: Create conf directories
+  file: path={{ item }} recurse=true state=directory
+  with_items:
+    - /etc/nginx
+    - /etc/nginx/conf.d
+    - /usr/local/nginx
+    - /var/log/nginx
+
+- name: Create log files
+  file:
+    path: /var/log/nginx/{{ item }}
+    state: touch 
+  with_items:
+    - access.log
+    - error.log 
+
+- name: Configure {{nginx.version}} build
+  shell: ./configure {{ nginx.configure_string }}
+  args:
+    chdir: '{{ nginx.download_path }}/{{ nginx.version }}'
+  when: nginx_installed.rc != 0
+
+- name: Build {{nginx.version}}
+  shell: make
+  args:
+    chdir: '{{ nginx.download_path }}/{{ nginx.version }}'
+  when: nginx_installed.rc != 0
+
+- name: Install {{nginx.version}}
+  shell: make install
+  args:
+    chdir: '{{ nginx.download_path }}/{{ nginx.version }}'
+  when: nginx_installed.rc != 0
+
+- name: Link nginx executables
+  shell: ln -s /usr/local/nginx/sbin/* /usr/sbin
+  when: nginx_installed.rc != 0
+
+- name: Link nginx executables
+  shell: cp /usr/local/nginx/conf/* /etc/nginx/ && rm -rf /etc/nginx/*.default
+
+- name: Update nginx.conf file
+  template: >
+    src="nginx.conf.j2"
+    dest="/etc/nginx/nginx.conf"
+
+- name: Create nginx service file
+  template: >
+    src="nginx.service.j2"
+    dest="/etc/systemd/system/nginx.service"
+
+- name: Enable nginx service
+  shell: systemctl enable /etc/systemd/system/nginx.service
+
+- import_tasks: nginx-vhosts.yml
+
+- name: Reload systemctl
+  shell: systemctl daemon-reload
+
+- service:
+    name: nginx
+    state: restarted
+
+

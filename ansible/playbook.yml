@@ -1,106 +1,16 @@
 --- # Ansible playbook for centos 7 & php7 environment
 
-- hosts: '{{ server.hostname }}'
-  remote_user: '{{ server.remote_user }}'
+#- hosts: '{{ server.hostname }}'
+- hosts: 'all'
+#  remote_user: '{{ server.remote_user }}'
   become: yes
   become_method: sudo
   connection: ssh
   vars_files:
     - vars.yml
 
-  tasks:
-  - name: Check if PHP is installed.
-    command: which /usr/local/bin/php
-    changed_when: false
-    failed_when: false
-    register: php_installed
-
-  - name: Install main packages 
-    yum:
-      name: '{{ server.packages }}'
-      state: latest
-
-  - name: Add php export path bashrc for pecl
-    shell: echo 'export PHP_PEAR_PHP_BIN=$(which php)'>>/etc/bashrc
-    when: php_installed.rc != 0
-
-  - name: Add export path bashrc for /usr/local/bin
-    shell: echo 'export PATH=$PATH:/usr/local/bin'>>/root/.bashrc
-
-  - name: Download PHP7 archive
-    get_url:
-      url: '{{ php.url }}'
-      dest: '{{ php.download_path }}/{{ php.version }}.tar.gz'
-    when: php_installed.rc != 0
-
-  - name: Extract PHP7 archive
-    unarchive: 
-      src='{{ php.download_path }}/{{ php.version }}.tar.gz'
-      dest='{{ php.download_path }}'
-      creates=no
-      remote_src=yes
-    when: php_installed.rc != 0
-
-  - name: Create conf directories
-    file: path={{ item }} recurse=true state=directory
-    with_items:
-      - /etc/php/conf.d
-      - /etc/php/fpm/conf.d
-    when: php_installed.rc != 0
-
-  - name: Configure php build
-    shell: ./configure {{ php.configure_string }}
-    args:
-      chdir: '{{ php.download_path }}/{{ php.version }}'
-    when: php_installed.rc != 0
-
-  - name: Build PHP7
-    shell: make
-    args:
-      chdir: '{{ php.download_path }}/{{ php.version }}'
-    when: php_installed.rc != 0
-
-  - name: Install PHP7
-    shell: make install
-    args:
-      chdir: '{{ php.download_path }}/{{ php.version }}'
-    when: php_installed.rc != 0
-
-  - name: Add php export path bashrc for pecl
-    shell: echo 'export PHP_PEAR_PHP_BIN=$(which php)'>>/etc/bashrc
-    when: php_installed.rc != 0
-
-  - name: Copy php.ini file
-    template: >
-      src="templates/php.ini.tpl"
-      dest="/etc/php/php.ini"
-      mode=0644
-    when: php_installed.rc != 0
-
-  - name: Create php custom.ini file
-    template: >
-      src="templates/php-custom-config.tpl"
-      dest="/etc/php/conf.d/custom.ini"
-      owner="vagrant"
-      group="vagrant"
-      mode=0644
-    when: php_installed.rc != 0
-
-  - name: Update pecl
-    shell: PHP_PEAR_PHP_BIN=/usr/local/bin/php /usr/local/bin/pecl channel-update pecl.php.net
-
-  - name: Install pear modules
-    shell: PHP_PEAR_PHP_BIN=/usr/local/bin/php /usr/local/bin/pecl install {{ php.peclpackages }} 
-
-  handlers:
-  - name: startnginx
-    service:
-      name: nginx
-      enable: yes
-      state: restarted
-  - name: startfpm
-    service:
-      name: php-fpm
-      enable: yes
-      state: restarted
-
+  roles:
+    - general
+    - php
+    - nginx
+  

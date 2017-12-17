@@ -12,7 +12,7 @@ Vagrant.configure("2") do |config|
       ]
   end
 
-  config.vm.hostanme = "vagrant-centos7"
+  config.vm.hostname = "vagrant-centos7"
   config.vm.box = "centos/7"
   config.vm.network "forwarded_port", guest: 80, host: 8080
 
@@ -25,4 +25,9 @@ Vagrant.configure("2") do |config|
   config.vm.provision "shell", inline: <<-SHELL
      yum update -y
   SHELL
+
+  config.vm.provision "ansible" do |ansible|
+    ansible.playbook = "ansible/playbook.yml"
+    ansible.limit = 'all'
+  end
 end

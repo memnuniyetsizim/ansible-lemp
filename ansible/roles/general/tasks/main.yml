@@ -1,0 +1,11 @@
+--- # General package installation
+
+- name: Install epel packages 
+  yum:
+    name: '{{ server.epel }}'
+    state: latest
+
+- name: Install main packages 
+  yum:
+    name: '{{ server.packages }}'
+    state: latest
