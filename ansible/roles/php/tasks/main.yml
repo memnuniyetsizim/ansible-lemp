@@ -1,7 +1,7 @@
 --- # Install PHP7
 
 - name: Check if PHP is installed.
-  command: which /usr/local/bin/php
+  command: which php
   changed_when: false
   failed_when: false
   register: php_installed
@@ -12,11 +12,10 @@
   failed_when: false
   register: composer_installed
 
-- name: Add export path bashrc for /usr/local/bin 
-  shell: echo 'export PATH=$PATH:/usr/local/bin'>>/root/.bashrc
-
-- name: Add repo
-  shell: yum install http://rpms.remirepo.net/enterprise/remi-release-7.rpm -y
+- name: Install php 7.1 & packages 
+  yum:
+    name: 'http://rpms.remirepo.net/enterprise/remi-release-7.rpm'
+    state: latest
   when: php_installed.rc != 0
 
 - name: Enable remi php 71
