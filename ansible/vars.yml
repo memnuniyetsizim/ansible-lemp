@@ -3,7 +3,7 @@ server:
     hostname: vagrant-centos7
     remote_user: vagrant
     epel: epel-release
-    packages: [vim-common, vim, git, htop, curl, wget, tmux, zsh, openssl, libzip, libzip-devel, autoconf, bison, re2c, glibc-devel, libxml2-devel, libmcrypt-devel, libcurl-devel, bzip2-devel, libjpeg-devel, libpng-devel, openssl-devel, postgresql-devel, aspell-devel, readline-devel, librabbitmq, librabbitmq-devel]
+    packages: [vim-common, vim, git, htop, curl, wget, tmux, zsh, openssl, libzip, libzip-devel, autoconf, bison, re2c, glibc-devel, libxml2-devel, libmcrypt-devel, libcurl-devel, bzip2-devel, libjpeg-devel, libpng-devel, openssl-devel, postgresql-devel, aspell-devel, readline-devel, librabbitmq, librabbitmq-devel, yum-utils, mlocate]
     timezone: Europe/Istanbul
     locale: en_US.UTF-8
 nginx:
@@ -29,6 +29,7 @@ php:
     url: http://ro1.php.net/get/php-7.1.12.tar.gz/from/this/mirror
     version: php-7.1.12
     download_path: /usr/local/src
+    packages: [php, php-common, php-intl, php-mcrypt, php-soap, php-pdo, php-pgsql, php-opcache, php-mongodb, php-bcmath, php-gd, php-zip, php-pear]
     configure_string: "--with-config-file-path=/etc/php --with-config-file-scan-dir=/etc/php/conf.d --enable-bcmath --enable-exif --enable-dba --enable-opcache --enable-ftp --with-gettext --with-gd --enable-mbstring --with-bz2 --with-mhash --enable-mysqlnd --with-pdo-mysql=mysqlnd --with-openssl --enable-pcntl --with-pspell --enable-shmop --enable-soap --enable-sockets --enable-sysvmsg --enable-sysvsem --enable-sysvshm --enable-wddx --enable-zip --with-readline --with-curl --with-pcre-regex --disable-cgi --enable-fpm --with-pgsql --with-pdo-pgsql"
     peclpackages: "amqp xdebug"
 

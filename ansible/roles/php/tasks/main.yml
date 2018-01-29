@@ -6,108 +6,68 @@
   failed_when: false
   register: php_installed
 
+- name: Check if composer installed
+  command: which /usr/bin/composer
+  changed_when: false
+  failed_when: false
+  register: composer_installed
+
 - name: Add export path bashrc for /usr/local/bin 
   shell: echo 'export PATH=$PATH:/usr/local/bin'>>/root/.bashrc
 
-- name: Download PHP7 archive
-  get_url:
-    url: '{{ php.url }}'
-    dest: '{{ php.download_path }}/{{ php.version }}.tar.gz'
+- name: Add repo
+  shell: yum install http://rpms.remirepo.net/enterprise/remi-release-7.rpm -y
   when: php_installed.rc != 0
 
-- name: Extract PHP7 archive
-  unarchive: 
-    src='{{ php.download_path }}/{{ php.version }}.tar.gz'
-    dest='{{ php.download_path }}'
-    creates=no
-    remote_src=yes
+- name: Enable remi php 71
+  shell: yum-config-manager --enable remi-php71
   when: php_installed.rc != 0
 
-- name: Create conf directories
-  file: path={{ item }} recurse=true state=directory
-  with_items:
-    - /etc/php/conf.d
-    - /etc/php/fpm/conf.d
-    - /run/php-fpm
-  when: php_installed.rc != 0
+- name: Install php 7.1 & packages 
+  yum:
+    name: '{{ php.packages }}'
+    state: latest
 
-- name: Configure php build
-  shell: ./configure {{ php.configure_string }}
-  args:
-    chdir: '{{ php.download_path }}/{{ php.version }}'
-  when: php_installed.rc != 0
+- name: Download composer installer
+  shell: php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+  when: composer_installed.rc != 0
 
-- name: Build PHP7
-  shell: make
-  args:
-    chdir: '{{ php.download_path }}/{{ php.version }}'
-  when: php_installed.rc != 0
+- name: Install composer under /usr/bin/
+  shell: php composer-setup.php --install-dir=/usr/bin --filename=composer
+  when: composer_installed.rc != 0
 
-- name: Install PHP7
-  shell: make install
-  args:
-    chdir: '{{ php.download_path }}/{{ php.version }}'
-  when: php_installed.rc != 0
-
-- name: Add php export path bashrc for pecl
-  shell: echo 'export PHP_PEAR_PHP_BIN=$(which php)'>>/etc/bashrc
-  when: php_installed.rc != 0
-
-- name: Copy php.ini file
-  template: >
-    src="php.ini.j2"
-    dest="/etc/php/php.ini"
-    mode=0644
-  when: php_installed.rc != 0
+- name: Remove composer installer
+  shell: php -r "unlink('composer-setup.php');"
+  when: composer_installed.rc != 0
 
 - name: Create php custom.ini file
   template: >
     src="php-custom-config.j2"
-    dest="/etc/php/conf.d/custom.ini"
+    dest="/etc/php.d/custom.ini"
   when: php_installed.rc != 0
 
-- name: Copy default www.conf
-  shell: cp /usr/local/etc/php-fpm.d/www.conf.default /etc/php/fpm/conf.d/www.conf
+- name: Php-Fpm listen owner user
+  lineinfile: "dest=/etc/php-fpm.d/www.conf state=present regexp='^;?listen.owner = nobody' line='listen.owner = vagrant'"
 
-- name: Copy default php-fpm.conf
-  shell: cp /usr/local/etc/php-fpm.conf.default /etc/php/fpm/php-fpm.conf
+- name: Php-Fpm listen group
+  lineinfile: "dest=/etc/php-fpm.d/www.conf state=present regexp='^;?listen.group = nobody' line='listen.group = vagrant'"
 
-- name: Create php custom.ini file
-  template: >
-    src="php-fpm-service.j2"
-    dest="/etc/systemd/system/phpfpm.service"
+- name: Php-Fpm user
+  lineinfile: "dest=/etc/php-fpm.d/www.conf state=present regexp='^;?user = nobody' line='user = vagrant'"
 
-- name: Php-Fpm include path change
-  lineinfile: "dest=/etc/php/fpm/php-fpm.conf state=present regexp='^;?include' line='include=/etc/php/fpm/conf.d/*.conf'"
-
-- name: Php-Fpm socket path
-  lineinfile: "dest=/etc/php/fpm/conf.d/www.conf state=present regexp='^;?listen = 127.0.0.1:9000' line='listen = 127.0.0.1:9001'"
-
-- name: Php-Fpm socket path
-  lineinfile: "dest=/etc/php/fpm/conf.d/www.conf state=present regexp='^;?listen.owner = nobody' line='listen.owner = vagrant'"
-
-- name: Php-Fpm socket path
-  lineinfile: "dest=/etc/php/fpm/conf.d/www.conf state=present regexp='^;?listen.group = nobody' line='listen.group = vagrant'"
-
-- name: Php-Fpm socket path
-  lineinfile: "dest=/etc/php/fpm/conf.d/www.conf state=present regexp='^;?user = nobody' line='user = vagrant'"
-
-- name: Php-Fpm socket path
-  lineinfile: "dest=/etc/php/fpm/conf.d/www.conf state=present regexp='^;?group = nobody' line='group = vagrant'"
+- name: Php-Fpm group user
+  lineinfile: "dest=/etc/php-fpm.d/www.conf state=present regexp='^;?group = nobody' line='group = vagrant'"
 
 - name: Enable php-fpm service
-  shell: systemctl enable /etc/systemd/system/phpfpm.service
+  shell: systemctl enable php-fpm.service
 
 - name: Reload systemctl
   shell: systemctl daemon-reload
 
-- name: Update pecl
-  shell: PHP_PEAR_PHP_BIN=/usr/local/bin/php /usr/local/bin/pecl channel-update pecl.php.net
-
 - name: Install pear modules
-  shell: PHP_PEAR_PHP_BIN=/usr/local/bin/php /usr/local/bin/pecl install {{ php.peclpackages }}
+  shell: PHP_PEAR_PHP_BIN=/usr/bin/php /usr/bin/pecl install {{ php.peclpackages }}
       
 - service:
-    name: phpfpm
+    name: php-fpm
     state: restarted
 
