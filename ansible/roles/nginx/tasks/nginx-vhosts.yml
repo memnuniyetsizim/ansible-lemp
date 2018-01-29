@@ -6,3 +6,8 @@
     dest="/etc/nginx/conf.d/default.conf"
     mode=0644
 
+- name: Change owner nginx directory
+  shell: chown vagrant /etc/nginx -R
+
+- name: Change owner nginx log directory
+  shell: chown vagrant /var/log/nginx -R

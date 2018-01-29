@@ -74,6 +74,12 @@
 - name: Enable nginx service
   shell: systemctl enable /etc/systemd/system/nginx.service
 
+- name: Change owner nginx directory
+  shell: chown vagrant /etc/nginx -R
+
+- name: Change owner nginx log directory
+  shell: chown vagrant /var/log/nginx -R
+
 - import_tasks: nginx-vhosts.yml
 
 - name: Reload systemctl

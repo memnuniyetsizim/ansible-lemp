@@ -9,3 +9,9 @@
   yum:
     name: '{{ server.packages }}'
     state: latest
+
+- name: Disable selinux
+  lineinfile: "dest=/etc/selinux/config state=present regexp='SELINUX=enforcing' line='SELINUX=disabled'"
+
+- name: Disable selinux without reboot
+  shell: setenforce 0

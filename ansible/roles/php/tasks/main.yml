@@ -46,6 +46,9 @@
   when: php_installed.rc != 0
 
 - name: Php-Fpm listen owner user
+  lineinfile: "dest=/etc/php-fpm.d/www.conf state=present regexp='^;?listen = 127.0.0.1:9000' line='listen = 127.0.0.1:9001'"
+
+- name: Php-Fpm listen owner user
   lineinfile: "dest=/etc/php-fpm.d/www.conf state=present regexp='^;?listen.owner = nobody' line='listen.owner = vagrant'"
 
 - name: Php-Fpm listen group
@@ -59,6 +62,12 @@
 
 - name: Enable php-fpm service
   shell: systemctl enable php-fpm.service
+
+- name: Change owner php directories
+  shell: chown vagrant /etc/php* -R
+
+- name: Change owner fpm log directory
+  shell: chown vagrant /var/log/php-fpm -R
 
 - name: Reload systemctl
   shell: systemctl daemon-reload
