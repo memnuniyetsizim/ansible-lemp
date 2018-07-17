@@ -1,5 +1,5 @@
 server {
-    listen 80;
+    listen 80 default_server;
     server_name {{ nginx.servername }};
     root {{ nginx.docroot }};
     index  index.php index.html index.htm;

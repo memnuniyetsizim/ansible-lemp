@@ -12,17 +12,17 @@
   failed_when: false
   register: composer_installed
 
-- name: Install php 7.1 & packages 
+- name: Install php {{php.version}} & packages 
   yum:
-    name: 'http://rpms.remirepo.net/enterprise/remi-release-7.rpm'
+    name: '{{ php.remi_repo_url }}'
     state: latest
   when: php_installed.rc != 0
 
-- name: Enable remi php 71
-  shell: yum-config-manager --enable remi-php71
+- name: Enable remi php
+  shell: yum-config-manager --enable remi-php{{php.version}}
   when: php_installed.rc != 0
 
-- name: Install php 7.1 & packages 
+- name: Install php & packages 
   yum:
     name: '{{ php.packages }}'
     state: latest
