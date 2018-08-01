@@ -5,7 +5,7 @@ Vagrant.configure("2") do |config|
   config.vm.provider :virtualbox do |v|
       v.customize [
           "modifyvm", :id,
-          "--name", "default",
+          "--name", "php71",
           "--memory", 512,
           "--natdnshostresolver1", "on",
           "--cpus", 1,
